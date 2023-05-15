@@ -1,9 +1,9 @@
 # ytmusic-dl
-This is a simple program to download highest quality available albums with complete metadata from youtube music.
+This is a simple program to download premium quality albums, EPs and singles with complete metadata from youtube music.
 
 ### Requirements
 This program depends on `ffmpeg` framework, which you need to download from your GNU/Linux distribution repositories.
-Additionally, build script requires `wget` downloader and `pip` (the package installer for Python) programs.
+Additionally, build script requires `wget` downloader and `pip` (the package installer for Python).
 
 If you use an **Arch Linux** based distribution run:
 `sudo pacman -S ffmpeg wget python-pip`
@@ -11,7 +11,7 @@ If you use an **Arch Linux** based distribution run:
 On **Debian** and **Ubuntu** derivatives:
 `sudo apt install -y wget ffmpeg python3-pip`
 
-On Fedora:
+On **Fedora** and derivatives:
 `sudo dnf -y install ffmpeg python3-pip wget`
 
 ### Installation instructions
