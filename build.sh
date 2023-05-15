@@ -27,8 +27,8 @@ done
 
 wget 'https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp' -O yt-dlp-bin
 chmod +x yt-dlp-bin
-pip install -r "./src/requirements.txt"
-pyinstaller --distpath='./bin' --collect-all ytmusicapi --collect-all requests --collect-all colorama --add-binary 'yt-dlp-bin:.' --onefile --name ytmusic-dl "./src/"$vrs
+pip install -r "./src/requirements.txt" --user
+~/.local/bin/pyinstaller --distpath='./bin' --collect-all ytmusicapi --collect-all requests --collect-all colorama --add-binary 'yt-dlp-bin:.' --onefile --name ytmusic-dl "./src/"$vrs
 rm -f yt-dlp-bin
 rm -f *.spec
 rm -r build
