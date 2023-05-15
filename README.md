@@ -12,4 +12,4 @@ Additionally, build script requires `wget` downloader and `pip` (the package ins
 Script will provide you with single binary executable in the `bin` subdirectory.
 
 ### `Usage`
-Ytmusic-dl is a fully interactive command line application. Just run it from terminal and follow prompts.
+This is a fully interactive command line application. Just run `ytmusic-dl` from terminal and follow prompts.
