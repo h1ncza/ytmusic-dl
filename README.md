@@ -1,15 +1,15 @@
 # ytmusic-dl
 This is a simple program to download highest quality available albums with complete metadata from youtube music.
 
-### `Requirements`
+### Requirements
 This program depends on `ffmpeg` framework, which you need to download from your GNU/Linux distribution repositories.
 Additionally, build script requires `wget` downloader and `pip` (the package installer for Python) programs.
 
-### `Installation instructions`
+### Installation instructions
 1. Clone the repository.
-2. Run build.sh script
+2. `cd` into the project directory
+3. Run the `build.sh` bash script (for example `$bash build.sh`)
+4. Script will provide you with single binary executable in the `bin` subdirectory.
 
-Script will provide you with single binary executable in the `bin` subdirectory.
-
-### `Usage`
+### Usage
 This is a fully interactive command line application. Just run `ytmusic-dl` from terminal and follow prompts.
