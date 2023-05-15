@@ -8,7 +8,7 @@ Additionally, build script requires `wget` downloader and `pip` (the package ins
 ### Installation instructions
 1. Clone the repository.
 2. `cd` into the project directory
-3. Run the `build.sh` bash script (for example `$bash build.sh`)
+3. Run the `build.sh` bash script.
 4. Script will provide you with single binary executable in the `bin` subdirectory.
 
 ### Usage
