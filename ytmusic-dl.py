@@ -44,8 +44,8 @@ def findingArtist():
         )
     except IndexError:
         print("usage: ytmusic-dl.py [artist]")
-    except Exception as e:
-        print(e)
+    except UnboundLocalError:
+        print("usage: ytmusic-dl.py [artist]")
 
     if searchResult == []:
         print("\nno artist matching your query found.\nPlease try again.\n")
@@ -160,3 +160,5 @@ except KeyboardInterrupt:
     print("\nExiting program")
 except requests.exceptions.RequestException as e:
     print("You have to be connected to internet for this program to work.")
+except Exception as e:
+    print(e)
