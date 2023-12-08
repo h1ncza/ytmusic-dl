@@ -1,33 +1,90 @@
 #!/usr/bin/python
-
 import ytmusicapi
 import os
-import subprocess
+import yt_dlp
 import requests
 import sys
+import multiprocessing
 
-basePath = os.path.join(os.path.expanduser("~"), "music")
-ytdlArgs = [
-    "yt-dlp",
-    "-x",
-    "--embed-metadata",
-    "--embed-thumbnail",
-    "--audio-quality",
-    "0",
-    "--format",
-    "best",
-    "--audio-format",
-    "mp3",
-    "--parse-metadata",
-    "playlist_index:%(track_number)s",
-    "--parse-metadata",
-    ":(?P<webpage_url>)",
-    "--parse-metadata",
-    ":(?P<synopsis>)",
-    "--parse-metadata",
-    ":(?P<description>)",
-    "-o",
-]
+search_string = sys.argv[1]
+# search_string = some_Variable
+# search_string = input("ENTER SEARCH STRING: ")
+
+local_path = os.path.join(os.path.expanduser("~"), "music", "")
+
+ydl_opts = {
+    "external_downloader": {"default": "aria2c", "m3u8": "ffmpeg"},
+    "extract_flat": "discard_in_playlist",
+    "final_ext": "mp3",
+    "format": "(bestaudio[acodec^=opus]/bestaudio)/best",
+    "fragment_retries": 10,
+    "ignoreerrors": True,
+    "outtmpl": {
+        "default": local_path
+        + "%(artist)s"
+        + os.sep
+        + "%(artist)s %(album)s"
+        + os.sep
+        + "%(playlist_index)s. %(title)s.%(ext)s",
+        "pl_thumbnail": "",
+    },
+    "postprocessor_args": {
+        "embedthumbnail+ffmpeg_o": [
+            "-c:v",
+            "mjpeg",
+            "-vf",
+            "crop='if(gt(ih,iw),iw,ih)':'if(gt(iw,ih),ih,iw)'",
+        ]
+    },
+    "postprocessors": [
+        {
+            "actions": [
+                (
+                    yt_dlp.postprocessor.metadataparser.MetadataParserPP.interpretter,
+                    "playlist_index",
+                    "%(track_number)s",
+                ),
+                (
+                    yt_dlp.postprocessor.metadataparser.MetadataParserPP.interpretter,
+                    "",
+                    "(?P<webpage_url>)",
+                ),
+                (
+                    yt_dlp.postprocessor.metadataparser.MetadataParserPP.interpretter,
+                    "",
+                    "(?P<synopsis>)",
+                ),
+                (
+                    yt_dlp.postprocessor.metadataparser.MetadataParserPP.interpretter,
+                    "",
+                    "(?P<description>)",
+                ),
+            ],
+            "key": "MetadataParser",
+            "when": "pre_process",
+        },
+        {
+            "key": "FFmpegExtractAudio",
+            "nopostoverwrites": False,
+            "preferredcodec": "mp3",
+            "preferredquality": "0",
+        },
+        {
+            "add_chapters": True,
+            "add_infojson": "if_exists",
+            "add_metadata": True,
+            "key": "FFmpegMetadata",
+        },
+        {"already_have_thumbnail": False, "key": "EmbedThumbnail"},
+        {"key": "FFmpegConcat", "only_multi_video": True, "when": "playlist"},
+    ],
+    "retries": 10,
+    "writethumbnail": True,
+    "simulate": False,
+}
+
+if sys.argv[2] == "debug":
+    ydl_opts["simulate"] = True
 
 
 def estabilishConnection():
@@ -38,14 +95,14 @@ def estabilishConnection():
 def findingArtist():
     try:
         searchResult = ytm.search(
-            sys.argv[1],
+            search_string,
             filter="artists",
             ignore_spelling=False,
         )
     except IndexError:
         print("usage: ytmusic-dl.py [artist]")
-    except UnboundLocalError:
-        print("usage: ytmusic-dl.py [artist]")
+    except Exception as e:
+        print(e)
 
     if searchResult == []:
         print("\nno artist matching your query found.\nPlease try again.\n")
@@ -76,11 +133,13 @@ def findingArtist():
 
 
 def choosingAlbums():
+    playlist_urls = []
+
     try:
-        albums_browseId = ytm.get_artist(artistIdFound)["albums"]["browseId"]
-        if type(albums_browseId) == str:
-            albums_params = ytm.get_artist(artistIdFound)["albums"]["params"]
-            albumList = ytm.get_artist_albums(albums_browseId, albums_params)
+        playlist_browseId = ytm.get_artist(artistIdFound)["albums"]["browseId"]
+        if type(playlist_browseId) == str:
+            playlist_params = ytm.get_artist(artistIdFound)["albums"]["params"]
+            albumList = ytm.get_artist_albums(playlist_browseId, playlist_params)
         else:
             albumList = ytm.get_artist(artistIdFound)["albums"]["results"]
 
@@ -91,74 +150,56 @@ def choosingAlbums():
     for i in albumList:
         print("[", albumList.index(i) + 1, "]", "->", i["title"], i["year"])
 
-    while True:
+    aans1 = ""
+
+    while aans1 == "":
         aans1 = input(
             "\nTo download album, input corresponding number and press enter, or A+ENTER to download ALL albums.\n To skip to singles download input S and confirm choice with Enter.\n Exit program at any time by pressing CTRL+C\n> "
         )
-        if aans1 in ("S", "s"):
+        if aans1 in ("C", "c"):
+            os._exit(0)
+
+        elif aans1.isdecimal():
+            for i in albumList:
+                if int(aans1) == albumList.index(i) + 1:
+                    playlist_urls.append(
+                        "https://music.youtube.com/playlist?list="
+                        + ytm.get_album(i["browseId"])["audioPlaylistId"]
+                    )
+
+            return playlist_urls
             break
-        if aans1 in ("A", "a"):
+
+        elif aans1 in ("A", "a"):
             for i in albumList:
                 playList = ytm.get_album(i["browseId"])["audioPlaylistId"]
-                url = "https://music.youtube.com/playlist?list=" + playList
-                targetDir = (
-                    basePath
-                    + os.sep
-                    + artistName
-                    + os.sep
-                    + artistName
-                    + " "
-                    + i["title"]
-                    + " "
-                    + i["year"]
-                    + os.sep
-                )
-                os.makedirs(targetDir, exist_ok=True)
-                print("Downloading ", i["title"])
-                argS = ytdlArgs + [
-                    str(targetDir + "%(playlist_index)s. %(title)s.%(ext)s"),
-                    url,
-                ]
-                subprocess.run(argS)
+                URL = "https://music.youtube.com/playlist?list=" + playList
+                playlist_urls.append(URL)
+
+            return playlist_urls
             break
-        elif aans1.isdecimal() and int(aans1) in range(1, (len(albumList) + 1)):
-            chAlb = int(aans1) - 1
-            for i in albumList:
-                if albumList.index(i) == chAlb:
-                    playList = ytm.get_album(i["browseId"])["audioPlaylistId"]
-                    url = "https://music.youtube.com/playlist?list=" + playList
-                    targetDir = (
-                        basePath
-                        + os.sep
-                        + artistName
-                        + os.sep
-                        + artistName
-                        + " "
-                        + i["title"]
-                        + " "
-                        + i["year"]
-                        + os.sep
-                    )
-                    os.makedirs(targetDir, exist_ok=True)
-                    print("Downloading ", i["title"])
-                    argS = ytdlArgs + [
-                        str(targetDir + "%(playlist_index)s. %(title)s.%(ext)s"),
-                        url,
-                    ]
-                    subprocess.run(argS)
-            continue
+
         else:
             print("Invalid input!")
+            aans1 = ""
             continue
 
 
 try:
     estabilishConnection()
     findingArtist()
-    choosingAlbums()
 except KeyboardInterrupt:
     print("\nExiting program")
 except requests.exceptions.RequestException as e:
     print("You have to be connected to internet for this program to work.")
-except Exception as e:
-    print(e)
+
+Albums_ = choosingAlbums()
+
+
+def download_playlist(pl):
+    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+        ydl.download(pl)
+
+
+with multiprocessing.Pool() as pool:
+    pool.map(download_playlist, Albums_)
