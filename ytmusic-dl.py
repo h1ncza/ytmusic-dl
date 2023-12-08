@@ -83,9 +83,11 @@ ydl_opts = {
     "simulate": False,
 }
 
-if sys.argv[2] == "debug":
-    ydl_opts["simulate"] = True
-
+try:
+    if sys.argv[2] == "debug":
+        ydl_opts["simulate"] = True
+except:
+    pass
 
 def estabilishConnection():
     global ytm
