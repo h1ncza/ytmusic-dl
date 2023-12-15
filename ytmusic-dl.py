@@ -6,11 +6,12 @@ import requests
 import sys
 import multiprocessing
 
-search_string = sys.argv[1]
+# search_string = input("artist name: ")
 # search_string = some_Variable
 # search_string = input("ENTER SEARCH STRING: ")
 
-local_path = os.path.join(os.path.expanduser("~"), "music", "")
+search_string = sys.argv[1]
+local_path = os.path.join(os.path.expanduser("~"), "music")
 
 ydl_opts = {
     "external_downloader": {"default": "aria2c", "m3u8": "ffmpeg"},
@@ -20,12 +21,7 @@ ydl_opts = {
     "fragment_retries": 10,
     "ignoreerrors": True,
     "outtmpl": {
-        "default": local_path
-        + "%(artist)s"
-        + os.sep
-        + "%(artist)s %(album)s"
-        + os.sep
-        + "%(playlist_index)s. %(title)s.%(ext)s",
+        "default": local_path + "%(playlist_index)s. %(title)s.%(ext)s",
         "pl_thumbnail": "",
     },
     "postprocessor_args": {
@@ -89,6 +85,7 @@ try:
 except:
     pass
 
+
 def estabilishConnection():
     global ytm
     ytm = ytmusicapi.YTMusic()
@@ -136,6 +133,7 @@ def findingArtist():
 
 def choosingAlbums():
     playlist_urls = []
+    #  = []
 
     try:
         playlist_browseId = ytm.get_artist(artistIdFound)["albums"]["browseId"]
@@ -164,19 +162,45 @@ def choosingAlbums():
         elif aans1.isdecimal():
             for i in albumList:
                 if int(aans1) == albumList.index(i) + 1:
-                    playlist_urls.append(
+                    # os.makedirs(local_path + os.sep + artistName, exist_ok=True)
+                    album_dir = str(
+                        local_path
+                        + os.sep
+                        + artistName
+                        + os.sep
+                        + artistName
+                        + "-"
+                        + i["title"]
+                        + "-"
+                        + i["year"]
+                        + os.sep
+                    )
+                    URL = (
                         "https://music.youtube.com/playlist?list="
                         + ytm.get_album(i["browseId"])["audioPlaylistId"]
                     )
+                    playlist_urls.append((URL, album_dir))
 
             return playlist_urls
             break
 
         elif aans1 in ("A", "a"):
             for i in albumList:
+                album_dir = str(
+                    local_path
+                    + os.sep
+                    + artistName
+                    + os.sep
+                    + artistName
+                    + "-"
+                    + i["title"]
+                    + "-"
+                    + i["year"]
+                    + os.sep
+                )
                 playList = ytm.get_album(i["browseId"])["audioPlaylistId"]
                 URL = "https://music.youtube.com/playlist?list=" + playList
-                playlist_urls.append(URL)
+                playlist_urls.append((URL, album_dir))
 
             return playlist_urls
             break
@@ -196,12 +220,15 @@ except requests.exceptions.RequestException as e:
     print("You have to be connected to internet for this program to work.")
 
 Albums_ = choosingAlbums()
+print(Albums_)
 
 
-def download_playlist(pl):
-    with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-        ydl.download(pl)
+def download_playlist(playlist, music_dir):
+    new_ops = ydl_opts
+    new_ops["outtmpl"]["default"] = music_dir + "%(playlist_index)s. %(title)s.%(ext)s"
+    with yt_dlp.YoutubeDL(new_ops) as ydl:
+        ydl.download(playlist)
 
 
 with multiprocessing.Pool() as pool:
-    pool.map(download_playlist, Albums_)
+    pool.starmap(download_playlist, Albums_)
