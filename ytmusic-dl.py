@@ -154,7 +154,7 @@ def choosingAlbums():
 
     while aans1 == "":
         aans1 = input(
-            "\nTo download album, input corresponding number and press enter, or A+ENTER to download ALL albums.\n To skip to singles download input S and confirm choice with Enter.\n Exit program at any time by pressing CTRL+C\n> "
+            "\nTo download album, input corresponding number and press enter, or A+ENTER to download ALL albums.\n"
         )
         if aans1 in ("C", "c"):
             os._exit(0)
