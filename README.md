@@ -1,9 +1,8 @@
 # ytmusic-dl
-This is a simple script to download premium quality albums with complete metadata from youtube music for data analysis.
+It's a script I'm using to download music for machine learning research purpuoses.
 
 ### Requirements
-This code depends on `ffmpeg` framework and `yt-dlp` which you need to download from your GNU/Linux distribution repositories
+Depends on `ffmpeg` framework and `yt-dlp`.
 
-If you use an **Arch Linux** based distribution run:
+If you use an **Arch Linux** run:
 `sudo pacman -S ffmpeg yt-dlp`
-
